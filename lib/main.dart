@@ -1,48 +1,133 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:angelayu/quiz_brain.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
-void main() => runApp(XylophoneApp());
+QuizBrain quizBrain = QuizBrain();
+void main() => runApp(Quizzler());
 
-class XylophoneApp extends StatelessWidget {
-  const XylophoneApp({Key? key}) : super(key: key);
-  void playSound(int soundNumber) {
-    final player = AudioPlayer();
-    player.play(AssetSource('assets_note$soundNumber.wav'));
-  }
-
-  Expanded buildKey({color, soundNumber}) {
-    return Expanded(
-      child: TextButton(
-        style: TextButton.styleFrom(backgroundColor: color),
-        onPressed: () {
-          playSound(soundNumber);
-        },
-        child: Text('Tap me'),
-      ),
-    );
-  }
+class Quizzler extends StatelessWidget {
+  const Quizzler({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.grey.shade900,
         body: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              buildKey(color: Colors.red, soundNumber: 1),
-              buildKey(color: Colors.green, soundNumber: 2),
-              buildKey(color: Colors.blue, soundNumber: 3),
-              buildKey(color: Colors.white, soundNumber: 4),
-              buildKey(color: Colors.yellow, soundNumber: 5),
-              buildKey(color: Colors.green, soundNumber: 6),
-              buildKey(color: Colors.orange, soundNumber: 7),
-            ],
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10.0),
+            child: QuizPage(),
           ),
         ),
       ),
+    );
+  }
+}
+
+class QuizPage extends StatefulWidget {
+  const QuizPage({Key? key}) : super(key: key);
+
+  @override
+  State<QuizPage> createState() => _QuizPageState();
+}
+
+class _QuizPageState extends State<QuizPage> {
+  List<Icon> scoreKeeper = [];
+
+  void checkAnswer(bool check) {
+    bool correctAnswers = quizBrain.getAnswer();
+    setState(() {
+      if (quizBrain.isFinished()) {
+        Alert(
+          context: context,
+          title: "End",
+          desc: "Restart?",
+        ).show();
+
+        quizBrain.reset();
+        scoreKeeper = [];
+      } else {
+        if (correctAnswers == true) {
+          scoreKeeper.add(Icon(MdiIcons.check, color: Colors.green));
+        } else {
+          scoreKeeper.add(Icon(
+            MdiIcons.close,
+            color: Colors.red,
+          ));
+        }
+
+        quizBrain.nextQuestion();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 5,
+          child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Center(
+              child: Text(
+                quizBrain.getQuestion(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 25.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(15.0),
+            child: TextButton(
+              child: Text(
+                'True',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20.0,
+                ),
+              ),
+              onPressed: () {
+                // pressed true
+                checkAnswer(true);
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(15.0),
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: Text(
+                'False',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20.0,
+                ),
+              ),
+              onPressed: () {
+                // pressed false
+                checkAnswer(false);
+              },
+            ),
+          ),
+        ),
+        Row(children: scoreKeeper)
+      ],
     );
   }
 }
